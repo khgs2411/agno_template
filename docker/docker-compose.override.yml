@@ -1,0 +1,34 @@
+# Development overrides for docker-compose
+# This file is automatically loaded by docker-compose for development
+services:
+  app:
+    # Override build for development - enable rebuild
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: builder # Use builder stage for development with more tools
+    # Override command for development with hot reload
+    command: python main.py
+    # Additional development environment variables
+    environment:
+      - DEBUG=true
+      - LOG_LEVEL=debug
+    # Mount the entire source for development
+    volumes:
+      - ../:/app
+      - /app/.venv # Exclude virtual environment from mount
+      - /app/__pycache__ # Exclude Python cache
+    # Development port mapping might differ
+    ports:
+      - "8000:8000"
+      - "8001:8001" # Additional debug port if needed
+
+  postgres:
+    # Use same database as production for consistency
+    # Mount initialization scripts for development if needed
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Uncomment if you have init scripts:
+      # - ../docker/postgres/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432" # Expose for local development tools

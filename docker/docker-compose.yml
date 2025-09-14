@@ -1,0 +1,75 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: agno-template-app
+    pull_policy: build
+    container_name: agno-template-app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg://agno_user:agno_password@postgres:5432/agno_db
+      - PYTHONPATH=/app
+      - HOST=0.0.0.0
+      - PORT=8000
+    env_file:
+      - ../.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - agno-network
+    volumes:
+      # Mount source code for hot reload (development)
+      - ../app:/app/app
+      - ../main.py:/app/main.py
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: agno-template-postgres
+    environment:
+      POSTGRES_DB: agno_db
+      POSTGRES_USER: agno_user
+      POSTGRES_PASSWORD: agno_password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Shared memory settings for better performance
+      - /dev/shm:/dev/shm
+    ports:
+      - "5432:5432"
+    networks:
+      - agno-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agno_user -d agno_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # Performance optimizations
+    command: >
+      postgres
+      -c shared_buffers=256MB
+      -c max_connections=200
+      -c effective_cache_size=1GB
+      -c checkpoint_completion_target=0.7
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+
+networks:
+  agno-network:
+    driver: bridge
+    name: agno-network
+
+volumes:
+  postgres_data:
+    name: agno-postgres-data

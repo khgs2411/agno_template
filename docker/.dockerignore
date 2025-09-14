@@ -1,0 +1,101 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+docker/
+.dockerignore
+Dockerfile*
+docker-compose*.yml
+
+# Development
+.env*
+*.log
+logs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Node.js (in case of future frontend)
+node_modules/
+npm-debug.log*
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Specify tools
+.specify/
+
+# Claude
+.claude/
+
+# UV and pip files (generated during build)
+uv.lock
+requirements.txt

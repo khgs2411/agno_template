@@ -15,9 +15,9 @@ AGENT_DEPENDENCIES = []
 
 
 @register_agent(
-    tags=["core", "documentation", "help", "legacy"],
+    tags=["core", "documentation", "help"],
     priority=75,
-    enabled=False  # Disabled to avoid conflicts with example agents
+    enabled=True  # Enabled for simplified discovery system
 )
 def create_docs_agent():
     """

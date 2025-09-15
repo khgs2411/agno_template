@@ -21,13 +21,11 @@ discovery_logger = get_logger("agent-discovery")
 
 class DiscoveryPattern(IntEnum):
     """
-    Discovery pattern enumeration with priority ordering.
+    Discovery pattern enumeration - simplified to decorator only.
 
-    Lower numbers indicate higher priority during discovery.
+    Keeping enum for backward compatibility but only decorator pattern is used.
     """
-    DECORATOR = 1    # Highest priority: @register_agent decorated functions
-    CONVENTION = 2   # Medium priority: *_agent.py files
-    CONFIGURATION = 3  # Lowest priority: AGENT_CONFIG exports
+    DECORATOR = 1    # Only supported pattern: @register_agent decorated functions
 
 
 @dataclass

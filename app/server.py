@@ -2,7 +2,7 @@ import os
 from agno.os import AgentOS
 from fastapi import FastAPI
 
-from app.agents import AgentManager
+from app.agents import discover_and_create_all
 from app.utils.log import logger
 
 
@@ -11,19 +11,10 @@ class Server:
     app: FastAPI
 
     def __init__(self):
-        # Discover and create all enabled agents
+        # Discover and create all enabled agents - SIMPLIFIED
         try:
-            # Perform agent discovery
-            discovered_count = AgentManager.discover()
-            logger.info(f"Agent discovery completed: {discovered_count} agents found")
-
-            # Get discovery statistics
-            stats = AgentManager.get_stats()
-            logger.debug(f"Discovery stats: {stats}")
-
-            # Create instances of all enabled agents
-            agents = AgentManager.create_enabled_agents()
-            logger.info(f"Created {len(agents)} enabled agent instances")
+            agents = discover_and_create_all()
+            logger.info(f"Agent discovery and creation completed: {len(agents)} agents")
 
             # Log agent names for debugging
             if agents:
@@ -33,7 +24,7 @@ class Server:
                 logger.warning("No enabled agents found")
 
         except Exception as e:
-            logger.error(f"Failed to load agents: {e}")
+            logger.error(f"Failed to discover and create agents: {e}")
             # Fallback to empty list if agent loading fails
             agents = []
             logger.warning("Starting AgentOS with no agents due to loading failure")

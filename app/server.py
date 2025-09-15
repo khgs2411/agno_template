@@ -14,20 +14,10 @@ class Server:
         # Discover and create all enabled agents - SIMPLIFIED
         try:
             agents = discover_and_create_all()
-            logger.info(f"Agent discovery and creation completed: {len(agents)} agents")
-
-            # Log agent names for debugging
-            if agents:
-                agent_names = [getattr(agent, 'name', 'Unknown') for agent in agents]
-                logger.info(f"Loaded agents: {', '.join(agent_names)}")
-            else:
-                logger.warning("No enabled agents found")
-
         except Exception as e:
             logger.error(f"Failed to discover and create agents: {e}")
             # Fallback to empty list if agent loading fails
             agents = []
-            logger.warning("Starting AgentOS with no agents due to loading failure")
 
         # Create the AgentOS
         self.agent_os = AgentOS(

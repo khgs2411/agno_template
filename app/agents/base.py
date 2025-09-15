@@ -13,10 +13,10 @@ from enum import IntEnum
 from typing import Callable, Dict, Any, List, Optional
 from pathlib import Path
 
-from app.utils.log import get_logger
+from app.utils.log import logger
 
 # Logger for agent discovery system
-discovery_logger = get_logger("agent-discovery")
+discovery_logger = logger
 
 
 class DiscoveryPattern(IntEnum):
@@ -25,7 +25,8 @@ class DiscoveryPattern(IntEnum):
 
     Keeping enum for backward compatibility but only decorator pattern is used.
     """
-    DECORATOR = 1    # Only supported pattern: @register_agent decorated functions
+
+    DECORATOR = 1  # Only supported pattern: @register_agent decorated functions
 
 
 @dataclass
@@ -35,6 +36,7 @@ class AgentMetadata:
 
     Contains all metadata needed for agent categorization, filtering, and lifecycle management.
     """
+
     name: str
     pattern: DiscoveryPattern
     tags: List[str] = field(default_factory=list)
@@ -67,6 +69,7 @@ class AgentDefinition:
     Represents a fully discovered agent including the factory function to create instances
     and all associated metadata.
     """
+
     name: str
     factory_function: Callable[[], Any]  # Returns Agno Agent instance
     metadata: AgentMetadata
@@ -89,7 +92,7 @@ class AgentDefinition:
             raise ValueError("Source file must be a string")
 
         # Validate source file exists (skip for decorator pattern as file may be unknown)
-        if self.source_file != 'unknown' and not Path(self.source_file).exists():
+        if self.source_file != "unknown" and not Path(self.source_file).exists():
             raise ValueError(f"Source file does not exist: {self.source_file}")
 
 
@@ -100,6 +103,7 @@ class AgentFilter:
 
     Supports filtering by various agent attributes for flexible agent selection.
     """
+
     tags: Optional[List[str]] = None
     enabled: Optional[bool] = None
     pattern: Optional[DiscoveryPattern] = None

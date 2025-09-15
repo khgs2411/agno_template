@@ -38,6 +38,7 @@ class AgentRegistry:
     """
 
     _instance = None
+    _created_agents_cache: List[Agent] = []  # Global cache for created agents
 
     def __new__(cls):
         """Singleton pattern implementation."""
@@ -61,7 +62,7 @@ class AgentRegistry:
         self._setup_default_discovery_paths()
 
         self._initialized = True
-        discovery_logger.info("AgentRegistry initialized (simplified)")
+        # Registry initialization - silent
 
     def _setup_default_discovery_paths(self):
         """Setup default discovery paths based on project structure."""
@@ -69,12 +70,10 @@ class AgentRegistry:
         definitions_path = Path(__file__).parent / "definitions"
         if definitions_path.exists():
             self._discovery_paths.append(definitions_path)
-            discovery_logger.debug(f"Added default discovery path: {definitions_path}")
 
         # Also scan app/agents/ for backward compatibility
         agents_path = Path(__file__).parent
         self._discovery_paths.append(agents_path)
-        discovery_logger.debug(f"Added agents discovery path: {agents_path}")
 
     def discover_agents(self, force_refresh: bool = False) -> None:
         """
@@ -84,12 +83,9 @@ class AgentRegistry:
             force_refresh: Whether to force rediscovery of all agents
         """
         if self._discovery_completed and not force_refresh:
-            discovery_logger.debug("Discovery already completed, skipping")
             return
 
-        discovery_logger.info(
-            "Starting simplified agent discovery (decorator pattern only)"
-        )
+        # Silent discovery start
 
         if force_refresh:
             self.clear_registry()
@@ -101,23 +97,14 @@ class AgentRegistry:
             discovery_logger.error(f"Error in decorator pattern discovery: {e}")
 
         self._discovery_completed = True
-        discovery_logger.info(
-            f"Discovery completed. Found {len(self._agent_definitions)} agents"
-        )
 
-        # Log discovered agents
-        for name, agent_def in self._agent_definitions.items():
-            discovery_logger.debug(
-                f"Discovered agent: {name} "
-                f"[{agent_def.metadata.pattern.name}, "
-                f"priority={agent_def.metadata.priority}, "
-                f"enabled={agent_def.metadata.enabled}]"
-            )
+        # Only log if agents found
+        if self._agent_definitions:
+            agent_names = list(self._agent_definitions.keys())
+            discovery_logger.info(f"Discovered {len(agent_names)} agent(s): {', '.join(agent_names)}")
 
     def _discover_decorator_pattern(self) -> None:
         """Discover agents marked with @register_agent decorator."""
-        discovery_logger.debug("Starting decorator pattern discovery")
-
         # Import all modules to trigger decorator registration
         for path in self._discovery_paths:
             self._scan_path_for_modules(path)
@@ -125,7 +112,6 @@ class AgentRegistry:
         # Register any decorated functions that were collected
         for name, func in self._decorated_functions.items():
             if name not in self._agent_definitions:
-                discovery_logger.debug(f"Registering decorated agent: {name}")
                 # Decorated functions should have metadata attached by the decorator
                 if hasattr(func, "_agent_metadata"):
                     metadata = func._agent_metadata
@@ -138,10 +124,18 @@ class AgentRegistry:
                     )
 
     def _scan_path_for_modules(self, path: Path) -> None:
-        """Scan a path and import all Python modules."""
+        """Scan a path and import all Python modules, skipping system files."""
+        # Skip core agent system files to prevent import errors - FIXED
+        skip_files = {
+            'registry.py', 'builder.py', 'decorators.py', 'base.py', 'manager.py'
+        }
+
         for py_file in path.glob("*.py"):
             if py_file.name.startswith("__"):
                 continue
+            if py_file.name in skip_files:
+                continue
+
             self._import_module_from_file(py_file)
 
     def _import_module_from_file(self, file_path: Path) -> Optional[object]:
@@ -180,9 +174,12 @@ class AgentRegistry:
 
         This is called by the decorator itself during module import.
         """
+        # Prevent duplicate registrations - FIXED
+        if name in self._decorated_functions:
+            return
+
         self._decorated_functions[name] = func
         func._agent_metadata = metadata
-        discovery_logger.debug(f"Collected decorated function: {name}")
 
     def _register_agent_definition(
         self,
@@ -212,9 +209,6 @@ class AgentRegistry:
                 source_file=source_file,
             )
             self._agent_definitions[name] = agent_def
-            discovery_logger.info(
-                f"Registered agent: {name} (priority: {metadata.priority})"
-            )
         except Exception as e:
             discovery_logger.error(f"Failed to register agent {name}: {e}")
 
@@ -248,7 +242,6 @@ class AgentRegistry:
         agent_def = self._agent_definitions.get(name)
         if agent_def:
             agent_def.metadata.enabled = True
-            discovery_logger.info(f"Enabled agent: {name}")
             return True
         return False
 
@@ -257,7 +250,6 @@ class AgentRegistry:
         agent_def = self._agent_definitions.get(name)
         if agent_def:
             agent_def.metadata.enabled = False
-            discovery_logger.info(f"Disabled agent: {name}")
             return True
         return False
 
@@ -266,7 +258,6 @@ class AgentRegistry:
         self._agent_definitions.clear()
         self._decorated_functions.clear()
         self._discovery_completed = False
-        discovery_logger.info("Agent registry cleared")
 
     @classmethod
     def discover_and_create_all(cls) -> List[Agent]:
@@ -274,9 +265,17 @@ class AgentRegistry:
         One-shot discovery and creation of all enabled agents.
 
         This is the simplified public API for server integration.
+        Returns cached agents if already created.
         """
+        # Return cached agents if already created - PERFORMANCE OPTIMIZATION
+        if cls._created_agents_cache:
+            return cls._created_agents_cache
+
         registry = cls()
-        registry.discover_agents()
+
+        # Only perform discovery once
+        if not registry._discovery_completed:
+            registry.discover_agents()
 
         # Get enabled agents and create instances
         enabled_agents = [
@@ -290,10 +289,16 @@ class AgentRegistry:
             try:
                 agent = agent_def.factory_function()
                 agents.append(agent)
-                discovery_logger.info(f"Created agent: {agent_def.name}")
             except Exception as e:
                 discovery_logger.error(f"Failed to create agent {agent_def.name}: {e}")
                 # Continue with other agents
 
-        discovery_logger.info(f"Created {len(agents)} enabled agents")
+        # Cache the created agents
+        cls._created_agents_cache = agents
+
+        # Single summary log
+        if agents:
+            agent_names = [getattr(a, 'name', 'Unknown') for a in agents]
+            discovery_logger.info(f"Loaded {len(agents)} agent(s): {', '.join(agent_names)}")
+
         return agents

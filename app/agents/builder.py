@@ -41,15 +41,23 @@ def _get_agent_constructor_params() -> set:
     try:
         signature = inspect.signature(Agent.__init__)
         # Exclude 'self' and parameters handled by builder methods
-        excluded_params = {
-            'self', 'name', 'model', 'tools', 'db', 'instructions'
+        excluded_params = {"self", "name", "model", "tools", "db", "instructions"}
+        return {
+            param
+            for param in signature.parameters.keys()
+            if param not in excluded_params
         }
-        return {param for param in signature.parameters.keys() if param not in excluded_params}
     except Exception:
         # Fallback to common parameters if introspection fails
         return {
-            'add_history_to_context', 'num_history_sessions', 'num_history_runs',
-            'enable_session_summaries', 'markdown', 'id', 'user_id', 'session_id'
+            "add_history_to_context",
+            "num_history_sessions",
+            "num_history_runs",
+            "enable_session_summaries",
+            "markdown",
+            "id",
+            "user_id",
+            "session_id",
         }
 
 
@@ -77,7 +85,6 @@ class AgentBuilder:
 
         self._name = name
         self._reset_configuration()
-        discovery_logger.debug(f"Initialized AgentBuilder for: {name}")
 
     def _reset_configuration(self):
         """Reset all configuration to defaults."""
@@ -106,14 +113,16 @@ class AgentBuilder:
 
         # Default agent settings
         self._agent_config = {
-            'add_history_to_context': True,
-            'num_history_sessions': 5,
-            'num_history_runs': 20,
-            'enable_session_summaries': True,
-            'markdown': True
+            "add_history_to_context": True,
+            "num_history_sessions": 5,
+            "num_history_runs": 20,
+            "enable_session_summaries": True,
+            "markdown": True,
         }
 
-    def with_model(self, provider: Union[str, Any], model_id: Optional[str] = None, **kwargs) -> 'AgentBuilder':
+    def with_model(
+        self, provider: Union[str, Any], model_id: Optional[str] = None, **kwargs
+    ) -> "AgentBuilder":
         """
         Configure the model for the agent.
 
@@ -136,14 +145,13 @@ class AgentBuilder:
             else:
                 # Use provider default
                 self._model = ModelFactory.get(provider, **kwargs)
-            discovery_logger.debug(f"Configured model: {provider}")
         except Exception as e:
             discovery_logger.error(f"Failed to configure model {provider}: {e}")
             raise ValueError(f"Failed to configure model {provider}: {e}")
 
         return self
 
-    def with_mcp(self, *tools: str) -> 'AgentBuilder':
+    def with_mcp(self, *tools: str) -> "AgentBuilder":
         """
         Add MCP tools to the agent.
 
@@ -155,14 +163,15 @@ class AgentBuilder:
         """
         for tool_name in tools:
             if not isinstance(tool_name, str):
-                raise ValueError(f"MCP tool name must be a string, got: {type(tool_name)}")
+                raise ValueError(
+                    f"MCP tool name must be a string, got: {type(tool_name)}"
+                )
 
             try:
                 # Lazy load MCP tools to prevent hot reload issues
                 mcp_tool = MCPManager.get(tool_name)
                 if mcp_tool:
                     self._mcp_tools.append(mcp_tool)
-                    discovery_logger.debug(f"Added MCP tool: {tool_name}")
                 else:
                     discovery_logger.warning(f"MCP tool not found: {tool_name}")
             except Exception as e:
@@ -171,7 +180,7 @@ class AgentBuilder:
 
         return self
 
-    def with_db(self, db_config: Optional[Dict[str, Any]] = None) -> 'AgentBuilder':
+    def with_db(self, db_config: Optional[Dict[str, Any]] = None) -> "AgentBuilder":
         """
         Configure database connection.
 
@@ -184,24 +193,23 @@ class AgentBuilder:
         try:
             if db_config:
                 self._db_config = db_config
-                db_url = db_config.get('db_url')
+                db_url = db_config.get("db_url")
                 if not db_url:
                     raise ValueError("Database configuration must include 'db_url'")
             else:
                 # Use default PostgresSettings
                 postgres_settings = PostgresSettings()
                 db_url = postgres_settings.get_db_url()
-                self._db_config = {'db_url': db_url}
+                self._db_config = {"db_url": db_url}
 
             self._db = PostgresDb(db_url=db_url)
-            discovery_logger.debug("Configured database connection")
         except Exception as e:
             discovery_logger.error(f"Failed to configure database: {e}")
             raise ValueError(f"Failed to configure database: {e}")
 
         return self
 
-    def with_vector_db(self, config: Optional[Dict[str, Any]] = None) -> 'AgentBuilder':
+    def with_vector_db(self, config: Optional[Dict[str, Any]] = None) -> "AgentBuilder":
         """
         Configure vector database.
 
@@ -218,13 +226,13 @@ class AgentBuilder:
 
             # Use provided config or defaults
             vector_config = config or {}
-            table_name = vector_config.get('table_name', 'embeddings')
+            table_name = vector_config.get("table_name", "embeddings")
 
             # Get db_url from config or use the one from database configuration
-            if 'db_url' in vector_config:
-                db_url = vector_config['db_url']
+            if "db_url" in vector_config:
+                db_url = vector_config["db_url"]
             elif self._db_config:
-                db_url = self._db_config['db_url']
+                db_url = self._db_config["db_url"]
             else:
                 # Fallback to PostgresSettings
                 postgres_settings = PostgresSettings()
@@ -235,14 +243,13 @@ class AgentBuilder:
                 db_url=db_url,
             )
             self._vector_db_config = vector_config
-            discovery_logger.debug(f"Configured vector database: {table_name}")
         except Exception as e:
             discovery_logger.error(f"Failed to configure vector database: {e}")
             raise ValueError(f"Failed to configure vector database: {e}")
 
         return self
 
-    def with_memory(self, config: Optional[Dict[str, Any]] = None) -> 'AgentBuilder':
+    def with_memory(self, config: Optional[Dict[str, Any]] = None) -> "AgentBuilder":
         """
         Configure memory tools.
 
@@ -266,22 +273,22 @@ class AgentBuilder:
                 raise ValueError("Database connection required for memory tools")
 
             # Add Mem0Tools if API key is available
-            mem0_api_key = memory_config.get('mem0_api_key') or os.getenv("MEM0_API_KEY")
+            mem0_api_key = memory_config.get("mem0_api_key") or os.getenv(
+                "MEM0_API_KEY"
+            )
             if mem0_api_key:
-                user_id = memory_config.get('user_id', "1")
+                user_id = memory_config.get("user_id", "1")
                 mem0_tool = Mem0Tools(api_key=mem0_api_key, user_id=user_id)
                 self._custom_tools.append(mem0_tool)
-                discovery_logger.debug("Added Mem0 memory tools")
 
             self._memory_config = memory_config
-            discovery_logger.debug("Configured memory tools")
         except Exception as e:
             discovery_logger.error(f"Failed to configure memory: {e}")
             raise ValueError(f"Failed to configure memory: {e}")
 
         return self
 
-    def with_tools(self, tools: List[Any]) -> 'AgentBuilder':
+    def with_tools(self, tools: List[Any]) -> "AgentBuilder":
         """
         Add custom tools to the agent.
 
@@ -295,10 +302,9 @@ class AgentBuilder:
             raise ValueError("Tools must be provided as a list")
 
         self._custom_tools.extend(tools)
-        discovery_logger.debug(f"Added {len(tools)} custom tools")
         return self
 
-    def with_instructions(self, instructions: str) -> 'AgentBuilder':
+    def with_instructions(self, instructions: str) -> "AgentBuilder":
         """
         Set agent instructions.
 
@@ -312,10 +318,9 @@ class AgentBuilder:
             raise ValueError("Instructions must be a string")
 
         self._instructions = instructions
-        discovery_logger.debug("Configured agent instructions")
         return self
 
-    def with_metadata(self, **metadata) -> 'AgentBuilder':
+    def with_metadata(self, **metadata) -> "AgentBuilder":
         """
         Set discovery metadata for the agent.
 
@@ -327,17 +332,16 @@ class AgentBuilder:
         """
         self._metadata = AgentMetadata(
             name=self._name,
-            pattern=metadata.get('pattern', DiscoveryPattern.DECORATOR),
-            tags=metadata.get('tags', []),
-            priority=metadata.get('priority', 50),
-            enabled=metadata.get('enabled', True),
-            dependencies=metadata.get('dependencies', []),
-            custom_attributes=metadata.get('custom_attributes', {})
+            pattern=metadata.get("pattern", DiscoveryPattern.DECORATOR),
+            tags=metadata.get("tags", []),
+            priority=metadata.get("priority", 50),
+            enabled=metadata.get("enabled", True),
+            dependencies=metadata.get("dependencies", []),
+            custom_attributes=metadata.get("custom_attributes", {}),
         )
-        discovery_logger.debug(f"Configured metadata for: {self._name}")
         return self
 
-    def with_config(self, **config) -> 'AgentBuilder':
+    def with_config(self, **config) -> "AgentBuilder":
         """
         Set additional agent configuration.
 
@@ -362,10 +366,9 @@ class AgentBuilder:
             )
 
         self._agent_config.update(config)
-        discovery_logger.debug(f"Updated agent configuration with: {list(config.keys())}")
         return self
 
-    def build(self) -> 'Agent':
+    def build(self) -> "Agent":
         """
         Build and return the configured Agent instance.
 
@@ -396,32 +399,31 @@ class AgentBuilder:
 
             # Build agent configuration
             agent_config = {
-                'name': self._name,
-                'model': self._model,
-                'tools': all_tools,
-                **self._agent_config
+                "name": self._name,
+                "model": self._model,
+                "tools": all_tools,
+                **self._agent_config,
             }
 
             # Add optional configurations
             if self._db:
-                agent_config['db'] = self._db
+                agent_config["db"] = self._db
 
             if self._instructions:
-                agent_config['instructions'] = self._instructions
+                agent_config["instructions"] = self._instructions
 
             # Set default IDs if not provided
-            if 'id' not in agent_config:
-                agent_config['id'] = self._name.lower().replace(' ', '_')
+            if "id" not in agent_config:
+                agent_config["id"] = self._name.lower().replace(" ", "_")
 
-            if 'user_id' not in agent_config:
-                agent_config['user_id'] = "1"
+            if "user_id" not in agent_config:
+                agent_config["user_id"] = "1"
 
-            if 'session_id' not in agent_config:
-                agent_config['session_id'] = f"user_1_session_{agent_config['id']}"
+            if "session_id" not in agent_config:
+                agent_config["session_id"] = f"user_1_session_{agent_config['id']}"
 
             # Create the agent
             agent = Agent(**agent_config)
-            discovery_logger.info(f"Built agent: {self._name}")
             return agent
 
         except Exception as e:
@@ -431,7 +433,9 @@ class AgentBuilder:
     def _validate_build_configuration(self):
         """Validate that required configuration is present."""
         if not self._model:
-            raise ValueError("Model configuration is required. Use with_model() to configure.")
+            raise ValueError(
+                "Model configuration is required. Use with_model() to configure."
+            )
 
         # Validate metadata if present
         if self._metadata:
@@ -441,7 +445,7 @@ class AgentBuilder:
             except Exception as e:
                 raise ValueError(f"Invalid metadata configuration: {e}")
 
-    def reset(self) -> 'AgentBuilder':
+    def reset(self) -> "AgentBuilder":
         """
         Reset all configuration to defaults.
 
@@ -449,5 +453,4 @@ class AgentBuilder:
             AgentBuilder instance for method chaining
         """
         self._reset_configuration()
-        discovery_logger.debug(f"Reset configuration for: {self._name}")
         return self

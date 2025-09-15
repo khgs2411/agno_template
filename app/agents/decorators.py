@@ -106,7 +106,6 @@ def register_agent(
         try:
             registry = AgentRegistry()
             registry.register_decorated_function(agent_name, func, metadata)
-            discovery_logger.debug(f"Registered decorated function: {agent_name}")
         except Exception as e:
             discovery_logger.error(f"Failed to register decorated function {agent_name}: {e}")
 

@@ -2,7 +2,8 @@ import os
 from agno.os import AgentOS
 from fastapi import FastAPI
 
-from app.agents.docs_agent import agno_agent
+from app.agents import AgentManager
+from app.utils.log import logger
 
 
 class Server:
@@ -10,13 +11,38 @@ class Server:
     app: FastAPI
 
     def __init__(self):
-        # Create the model
+        # Discover and create all enabled agents
+        try:
+            # Perform agent discovery
+            discovered_count = AgentManager.discover()
+            logger.info(f"Agent discovery completed: {discovered_count} agents found")
+
+            # Get discovery statistics
+            stats = AgentManager.get_stats()
+            logger.debug(f"Discovery stats: {stats}")
+
+            # Create instances of all enabled agents
+            agents = AgentManager.create_enabled_agents()
+            logger.info(f"Created {len(agents)} enabled agent instances")
+
+            # Log agent names for debugging
+            if agents:
+                agent_names = [getattr(agent, 'name', 'Unknown') for agent in agents]
+                logger.info(f"Loaded agents: {', '.join(agent_names)}")
+            else:
+                logger.warning("No enabled agents found")
+
+        except Exception as e:
+            logger.error(f"Failed to load agents: {e}")
+            # Fallback to empty list if agent loading fails
+            agents = []
+            logger.warning("Starting AgentOS with no agents due to loading failure")
 
         # Create the AgentOS
         self.agent_os = AgentOS(
-            os_id="my-first-os",
-            description="My first AgentOS",
-            agents=[agno_agent],
+            os_id="agno-template-os",
+            description="Agno Template with Agent Discovery System",
+            agents=agents,
         )
 
         # Get the FastAPI app

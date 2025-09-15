@@ -68,7 +68,7 @@ Read the review and acceptance checklist, and check off each item in the checkli
 ```
 /plan
 
-Implement the Agent Discovery System using Python 3.10+ with the following technical approach:
+Plan the Agent Discovery System using Python 3.10+ with the following technical approach:
 
 Technology Stack:
 - Python 3.10+ with type hints
@@ -157,7 +157,15 @@ The tasks should follow the three-phase migration plan outlined in the technical
 
 ---
 
-## Step 6: Final Implementation Command
+## Step 6: Context Verification
+
+```
+I need you to review and think about the tasks.md file you just created and ensure that
+it outlines all tasks to such a degree that by giving this report to a new AI instance it will have all the necessary
+context to pick up and continue from where we are right now
+```
+
+## Step 7: Final Implementation Command
 
 spec-kit creates its own spec structure:
 

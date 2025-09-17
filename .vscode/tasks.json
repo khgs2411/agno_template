@@ -1,0 +1,103 @@
+{
+    // See https://code.visualstudio.com/docs/editor/tasks for more information
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "🐳 Docker: Start Services",
+            "type": "shell",
+            "command": "docker-compose up -d",
+            "options": {
+                "cwd": "${workspaceFolder}/.docker"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "close": true
+            },
+            "problemMatcher": [],
+            "runOptions": {
+                "runOn": "default"
+            }
+        },
+        {
+            "label": "🛑 Docker: Stop Services",
+            "type": "shell",
+            "command": "docker-compose down",
+            "options": {
+                "cwd": "${workspaceFolder}/.docker"
+            },
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "close": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🔄 Docker: Restart Services",
+            "type": "shell",
+            "command": "docker-compose restart",
+            "options": {
+                "cwd": "${workspaceFolder}/.docker"
+            },
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "close": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "📊 Docker: Show Status",
+            "type": "shell",
+            "command": "docker-compose ps",
+            "options": {
+                "cwd": "${workspaceFolder}/.docker"
+            },
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "close": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "📜 Docker: View Logs",
+            "type": "shell",
+            "command": "docker-compose logs -f",
+            "options": {
+                "cwd": "${workspaceFolder}/.docker"
+            },
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "close": false
+            },
+            "problemMatcher": [],
+            "isBackground": true
+        },
+    ]
+}

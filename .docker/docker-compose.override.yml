@@ -5,7 +5,7 @@ services:
     # Override build for development - enable rebuild
     build:
       context: ..
-      dockerfile: docker/Dockerfile
+      dockerfile: .docker/Dockerfile
       target: builder # Use builder stage for development with more tools
     # Override command for development with hot reload
     command: python main.py
@@ -29,6 +29,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       # Uncomment if you have init scripts:
-      # - ../docker/postgres/init:/docker-entrypoint-initdb.d
+      # - ../.docker/postgres/init:/.docker-entrypoint-initdb.d
     ports:
       - "5432:5432" # Expose for local development tools

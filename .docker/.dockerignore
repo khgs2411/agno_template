@@ -54,7 +54,7 @@ Thumbs.db
 .gitignore
 
 # Docker
-docker/
+.docker/
 .dockerignore
 Dockerfile*
 docker-compose*.yml

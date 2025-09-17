@@ -2,7 +2,7 @@ services:
   app:
     build:
       context: ..
-      dockerfile: docker/Dockerfile
+      dockerfile: .docker/Dockerfile
     image: agno-template-app
     pull_policy: build
     container_name: agno-template-app

@@ -23,7 +23,7 @@ This guide explains how to run the Agno Template project using Docker with Postg
 ## Project Structure
 
 ```
-docker/
+.docker/
 ├── Dockerfile                      # Multi-stage optimized build
 ├── docker-compose.yml              # Main orchestration file
 ├── docker-compose.override.yml     # Development overrides (auto-loaded)

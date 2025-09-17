@@ -12,13 +12,11 @@ Provides a fluent interface for building Agno agents with comprehensive configur
 Follows existing patterns from docs_agent.py and ModelFactory.
 """
 
-import os
 import inspect
 from typing import List, Dict, Any, Optional, Union, TYPE_CHECKING
 
 from agno.agent import Agent
 from agno.db.postgres import PostgresDb
-from agno.tools.mem0 import Mem0Tools
 from agno.tools.memory import MemoryTools
 from agno.tools.user_control_flow import UserControlFlowTools
 from agno.vectordb.pgvector import PgVector
@@ -26,7 +24,7 @@ from agno.vectordb.pgvector import PgVector
 from app.models.factory import ModelFactory
 from app.db.postgres.settings import PostgresSettings
 from app.tools.mcp import MCPManager
-from .base import AgentMetadata, DiscoveryPattern, discovery_logger
+from app.agents.base import AgentMetadata, DiscoveryPattern, discovery_logger
 
 if TYPE_CHECKING:
     from agno.agent import Agent
@@ -104,7 +102,6 @@ class AgentBuilder:
         self._mcp_tools = []
         self._custom_tools = []
         self._memory_tools = None
-        self._memory_config = {}
 
         # Agent configuration
         self._instructions = None
@@ -264,24 +261,12 @@ class AgentBuilder:
             if not self._db:
                 self.with_db()
 
-            memory_config = config or {}
-
             # Add standard MemoryTools
             if self._db:
                 self._memory_tools = MemoryTools(db=self._db)
             else:
                 raise ValueError("Database connection required for memory tools")
 
-            # Add Mem0Tools if API key is available
-            mem0_api_key = memory_config.get("mem0_api_key") or os.getenv(
-                "MEM0_API_KEY"
-            )
-            if mem0_api_key:
-                user_id = memory_config.get("user_id", "1")
-                mem0_tool = Mem0Tools(api_key=mem0_api_key, user_id=user_id)
-                self._custom_tools.append(mem0_tool)
-
-            self._memory_config = memory_config
         except Exception as e:
             discovery_logger.error(f"Failed to configure memory: {e}")
             raise ValueError(f"Failed to configure memory: {e}")
